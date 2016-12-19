@@ -10,7 +10,7 @@ git clone https://github.com/diging/tethne-services.git
 ```
 
 ### Install the following
-*   [Python v2.7.12](https://www.python.org/download/releases/2.7/)
+*   [Python v2.7.12](https://www.python.org/downloads/release/python-2712/)
 *   [Tethne](http://pythonhosted.org/tethne/)
     *   `pip install tethne`
 *   [pandas v0.19.0](http://pandas.pydata.org/)
