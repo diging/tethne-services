@@ -25,7 +25,7 @@ git clone https://github.com/diging/tethne-services.git
 
 This module will expose the following APIs:
 
-* `./tethne-services/parser/CorpusParser.py`
+* `./tethne-services/parser/CorpusParser.py`: 
 This module is responsible for parsing a `Tethne` corpus object and returns a pandas DataFrame with 14 columns. 
 Each row in the DataFrame is an Author-Papers instance.
 
@@ -34,7 +34,9 @@ Each row in the DataFrame is an Author-Papers instance.
         ```python
         from parser.CorpusParser import CorpusParser
         from tethne.readers import wos
-        parser = CorpusParser(tethne_corpus=self.corpus)
+        datapath = './data/Albertini_David.txt'
+        corpus = wos.read(datapath)
+        parser = CorpusParser(tethne_corpus=corpus)
         df = parser.parse() # returns pandas DataFrame of Author-Paper instances.
         
         #The DataFrame returned has the following colmns
@@ -44,8 +46,8 @@ Each row in the DataFrame is an Author-Papers instance.
         ```
      
 
-* `./tethne-services/authors/Cluster.py`(InitialCluster)
-InitialCluster, as the name suggests, groups Author-Paper instances by similar Author names. In this process, we
+* `./tethne-services/authors/Cluster.py (InitialCluster)`: 
+InitialCluster, as the name suggests, groups Author-Paper instances by similar author names. In this process, we
 do not use any classification or machine learning approach. Initial Clustering is done to limit the size of comparisons when we perform the actual classification.
 For example: It is not efficient to compare papers by the authors 'BRUCE WAYNE' and 'CLARK KENT' using the classification model. We know they are 2 different people.
 While we build this initial cluster, we group together author_literals which are similar and have higher probability of actually belonging to the same cluster.
