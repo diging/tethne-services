@@ -23,6 +23,8 @@ git clone https://github.com/diging/tethne-services.git
     *   `pip install fuzzywuzzy`
 
 
+### APIs
+
 This module will expose the following APIs:
 
 * `./tethne-services/parser/CorpusParser.py`: 
