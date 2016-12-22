@@ -1,10 +1,10 @@
-import sys
-sys.path.append('./')
+import os
+print os.getcwd()
 
 import unittest
-from tethne.readers import wos
-from authors.Cluster import InitialCluster
 
+from tethne.readers import wos
+from authors.cluster import InitialCluster
 datapath = './data/Albertini_David.txt'
 
 

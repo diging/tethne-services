@@ -1,5 +1,6 @@
-from parser.CorpusParser import CorpusParser
+from authors.paperinstances import CorpusParser
 from tethne import Corpus
+from tethne.readers import wos
 from fuzzywuzzy import fuzz
 import numpy as np
 import logging
@@ -19,7 +20,7 @@ class InitialCluster:
     of actually belonging to the same cluster.
 
     Example:
-        >>> from authors.Cluster import InitialCluster
+        >>> from authors.cluster import InitialCluster
         >>> from tethne.readers import wos
         >>> datapath = './data/Albertini_David.txt'
         >>> corpus = wos.read(datapath)
@@ -93,3 +94,33 @@ class InitialCluster:
                     assigned.add(x)
         logger.debug("Size of the initial Cluster is %s", len(self.initial_clusters))
         return self.initial_clusters
+
+
+class IdentityCluster:
+    def __init__(self, corpus):
+        if not isinstance(corpus, Corpus):
+            raise ValueError("The input object should be a Tethne Corpus object")
+        self.corpus = corpus
+        self.identity_clusters = {}
+
+    def build(self):
+        parser = CorpusParser(tethne_corpus=self.corpus)
+        df = parser.parse()
+        initial_cluster_instance = InitialCluster(corpus=self.corpus)
+        initial_clusters = initial_cluster_instance.build()
+        for x in initial_clusters:
+            current_block = df[df['AUTH_LITERAL'].isin(initial_clusters[x])]
+
+            if len(current_block) > 1:
+                for index, row in current_block.iterrows():
+                    for index_child, row_child in current_block.iterrows():
+                        d = {}
+
+
+
+
+
+corpus = wos.read('/Users/aosingh/tethne-services/tests/data/Albertini_David.txt')
+idenityobj = IdentityCluster(corpus=corpus)
+idenityobj.build()
+

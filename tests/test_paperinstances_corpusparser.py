@@ -1,8 +1,9 @@
-from tethne.readers import wos
-from parser.CorpusParser import CorpusParser
-import unittest
-import pandas as pd
 import sys
+import unittest
+
+import pandas as pd
+from tethne.readers import wos
+from authors.paperinstances import CorpusParser
 
 sys.path.append('./')
 datapath = './data/Albertini_David.txt'
