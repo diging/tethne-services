@@ -4,23 +4,29 @@ These models can be directly loaded and used for prediction: An example is shown
 
 ```python
     import pickle
-    from author.paperinstances import Compare
+    from authors.paperinstances import CorpusParser, classify
+ 
     
-    #Load the persisted classifier
-    classifier_path = '../classificationmodels/random_forest.pkl'
-    classifier = os.path.join(os.path.dirname(__file__), classifier_path)
-    with open(classifier, 'r') as output:
-        clf = pickle.loads(output.read())
+    #define the datapath 
+    datapath = '/Users/aosingh/tethne-services/tests/data/Boyer_Barbara.txt'
     
-    """
-    Create an instance of the Compare class. Here, the 2 paper samples passed in input are 2 rows of the pandas Dataframe.
-    This DataFrame can be created using the `CorpusParser.py` class using a `tethne.corpus` object.
+    # Parse and get the pandas DataFrame
+    corpus= wos.read(datapath)
+    parser = CorpusParser(tethne_corpus=corpus)
+    df = parser.parse()
     
+       
+    # Define the indices for 2 paper samples that you want to compare
     
-    """
+    index1 = 'BOYERBCWOS:000076265300004'
+    index2 = 'BOYERBWOS:A1996UQ10700011'
     
-    compare_instance = Compare(paper_sample1, paper_sample2)
-    compare_instance.create_single_record()
-    compare_instance.calculate_scores()
-    return clf.predict(compare_instance.scores_df[features])
+    # Call the classify method for the 2 paper instances.
+    match = classify(self.df.loc[index1], self.df.loc[index2])
+    
+    # if match == 1 then, papers belong to the same author, else they do not.
+    if match == [1]:
+        print "Papers belong to the same Author"
+    else:
+        print "Papers do not belong to the same Author"
 ```
