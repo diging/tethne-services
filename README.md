@@ -27,7 +27,7 @@ git clone https://github.com/diging/tethne-services.git
 
 In addition to the below examples, an example showing basic classification of 2 author-paper instances can be found [here](https://github.com/diging/tethne-services/tree/master/classificationmodels#serialized-models)
 
-This module will expose the following APIs:
+This package will expose the following APIs:
 
 * `CorpusParser.py`: 
 This module is responsible for parsing a `Tethne` corpus object and returning a pandas DataFrame with 14 columns. 
