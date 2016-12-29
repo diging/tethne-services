@@ -25,6 +25,8 @@ git clone https://github.com/diging/tethne-services.git
 
 ### APIs
 
+In addition to the below examples, an example showing basic classification of 2 author-paper instances can be found [here](https://github.com/diging/tethne-services/tree/master/classificationmodels#serialized-models)
+
 This module will expose the following APIs:
 
 * `CorpusParser.py`: 
@@ -199,7 +201,6 @@ author. We first build an initial cluster using the class `InitialCluster`. Plea
              u'SMITHGW': set([u'SMITHGWWOS:A1982QN98300013'])}
         ```
  
-An additional example which shows how 2 paper-instances are classified, can be found [here](https://github.com/diging/tethne-services/tree/master/classificationmodels)
 
  
 
