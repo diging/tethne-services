@@ -1,9 +1,20 @@
+from __future__ import division
 import pandas as pd
+import re
+import os
+import pickle
+
 from tethne import Corpus
 from ast import literal_eval
-import re
 from utilities import cosine_similarity, sentence_to_vector
 from fuzzywuzzy import fuzz
+
+
+# LOAD THE SERIALIZED RANDOM FOREST CLASSIFIER
+classifier_path = '../classificationmodels/random_forest.pkl'
+classifier = os.path.join(os.path.dirname(__file__), classifier_path)
+with open(classifier, 'r') as output:
+    clf = pickle.loads(output.read())
 
 
 # COLUMNS returned in the Author-paper instances after parsing a `Tethne` Corpus object
@@ -11,9 +22,11 @@ columns = ["WOSID", "DATE", "TITLE", "LASTNAME", "FIRSTNAME", "JOURNAL", "EMAILA
            "PUBLISHER", "SUBJECT", "WC", "AUTHOR_KEYWORDS", "INSTITUTE", "AUTH_LITERAL", "CO-AUTHORS"]
 
 
+# LAMBDA functions to be used when we compare institute names of 2 Author-paper instances.
 split_institute = lambda institute:institute.split(',')
 join_institute_names = lambda institute : " ".join(x for x in institute)
 
+# Features we will calculate before classification.
 features = ['INSTIT_SCORE',
         'BOTH_NAME_SCORE',
         'FNAME_SCORE',
@@ -22,8 +35,7 @@ features = ['INSTIT_SCORE',
         'LNAME_PARTIAL_SCORE',
         'EMAIL_ADDR_SCORE',
         'AUTH_KW_SCORE',
-        'COAUTHOR_SCORE',
-        'MATCH']
+        'COAUTHOR_SCORE']
 
 
 class CorpusParser:
@@ -42,7 +54,10 @@ class CorpusParser:
 
     Example:
         >>> from authors.paperinstances import CorpusParser
-        >>> corpus_parser = CorpusParser(tethne_corpus=self.corpus)
+        >>> from tethne.readers import wos
+        >>> datapath = "/Users/aosingh/tethne-services/tests/data/Albertini_David.txt"
+        >>> corpus = wos.read(datapath)
+        >>> corpus_parser = CorpusParser(tethne_corpus=corpus)
         >>> df = corpus_parser.parse() # final pandas DataFrame of Author-Paper instances.
 
     Methods:
@@ -132,8 +147,10 @@ class Compare:
         :param column_name:
         :return: training_record after setting the feature value.
         """
+
         record[attribute_name] = paper_sample[column_name]
         return record
+
 
     def create_single_record(self):
         record = []
@@ -154,7 +171,9 @@ class Compare:
         record.append(d)
         self.record_df = pd.DataFrame(record)
 
-    def get_score_for_coauthors(self):
+    @staticmethod
+    def get_score_for_coauthors(row):
+
         """
         Given a training_record, calculate the overlap score in between Co-authors
         The overlap score is calculated in between the fields COAUTHORS1, COAUTHORS2
@@ -168,22 +187,26 @@ class Compare:
         :param training_record:
         :return: A score between 0 and 1
         """
-        coauthor1 = self.record_df['COAUTHORS1']
-        coauthor2 = self.record_df['COAUTHORS2']
-        if coauthor1 is None or coauthor1 == "[]":
-            return 0
-        if coauthor2 is None or coauthor2 == "[]":
-            return 0
-        coauthor2 = set(literal_eval(coauthor2))
-        coauthor1 = set(literal_eval(coauthor1))
+        coauthor1 = row['COAUTHORS1']
+        coauthor2 = row['COAUTHORS2']
+        try:
+            if coauthor1 is None or len(coauthor1) == 0:
+                return 0
+            if coauthor2 is None or len(coauthor2) == 0:
+                return 0
+            coauthor2 = set(coauthor2)
+            coauthor1 = set(coauthor1)
 
-        kw_intersection = coauthor1 & coauthor2
-        kw_union = coauthor1 | coauthor2
-        if len(kw_union) > 0:
-            return len(kw_intersection)/len(kw_union)
-        return 0
+            kw_intersection = coauthor1 & coauthor2
+            kw_union = coauthor1 | coauthor2
+            if len(kw_union) > 0:
+                return len(kw_intersection)/len(kw_union)
+            return 0
+        except Exception:
+            return 0
 
-    def get_score_for_author_keywords(self):
+    @staticmethod
+    def get_score_for_author_keywords(row):
         """
         Given a training_record, calculate the overlap score in between Author Keywords
         The overlap score is calculated in between the fields AUTHOR_KW1, AUTHOR_KW2
@@ -197,22 +220,28 @@ class Compare:
         :param training_record:
         :return: A score between 0 and 1
         """
-        author_kw1 = self.record_df['AUTHOR_KW1']
-        author_kw2 = self.record_df['AUTHOR_KW2']
-        if author_kw1 is None or author_kw1 == "[]":
-            return 0
-        if author_kw2 is None or author_kw2 == "[]":
-            return 0
-        author_kw2 = set(literal_eval(author_kw2))
-        author_kw1 = set(literal_eval(author_kw1))
+        author_kw1 = row['AUTHOR_KW1']
+        author_kw2 = row['AUTHOR_KW2']
+        try:
+            if author_kw1 is None or len(author_kw1) == 0:
+                return 0
+            if author_kw2 is None or len(author_kw2) == 0:
+                return 0
+            author_kw2 = set(author_kw2)
+            author_kw1 = set(author_kw1)
 
-        kw_intersection = author_kw1 & author_kw2
-        kw_union = author_kw1 | author_kw2
-        if len(kw_union) > 0:
-            return len(kw_intersection)/len(kw_union)
-        return 0
+            kw_intersection = author_kw1 & author_kw2
+            kw_union = author_kw1 | author_kw2
+            if len(kw_union) > 0:
+                return len(kw_intersection)/len(kw_union)
+            return 0
+        except Exception:
+            "From exception AUTHOR KEYWORDS"
+            return 0
 
-    def get_score_for_email_address(self):
+
+    @staticmethod
+    def get_score_for_email_address(row):
         """
         Return 1 if both the email-addresses match else return 0.
 
@@ -222,34 +251,36 @@ class Compare:
         :return: A score of either 0 or 1
         """
 
-        email1 = self.record_df['EMAILADDRESS1']
-        email2 = self.record_df['EMAILADDRESS2']
-        if email1 is None or email1 == "[]":
+        email1 = row['EMAILADDRESS1']
+        email2 = row['EMAILADDRESS2']
+        if email1 is None or len(email1) == 0:
             return 0
-        if email2 is None or email2 == "[]":
+        if email2 is None or len(email2) == 0:
             return 0
-
-        if email2.startswith('[') and email1.startswith('['):
-            list1 = set(literal_eval(email1))
-            list2 = set(literal_eval(email2))
+        if isinstance(email1, list) & isinstance(email2, list):
+            list1 = set(email1)
+            list2 = set(email2)
             intersection = list1 & list2
             union = list1 | list2
             if len(union) > 0:
                 return len(intersection)/len(union)
-        if email2.startswith('[') and not email1.startswith('['):
-            if email1 in set(literal_eval(email2)):
+
+        if isinstance(email2, list) and not isinstance(email1, list):
+            if email1 in set(email2):
                 return 1
-        if email1.startswith('[') and not email2.startswith('['):
-            if email2 in set(literal_eval(email1)):
+        if isinstance(email1, list) and not isinstance(email2, list):
+            if email2 in set(email1):
                 return 1
         if email1 == email2:
             return 1
         return 0
 
-    def get_score_for_name(self):
-        return 1 if self.record_df['FIRST_NAME1'] == self.record_df['FIRST_NAME2'] \
-                    and self.record_df['LAST_NAME1'] == self.record_df['LAST_NAME2'] \
-                    else 0
+    @staticmethod
+    def get_score_for_name(row):
+        return 1 \
+            if row['FIRST_NAME1'] == row['FIRST_NAME2'] and \
+            row['LAST_NAME1'] == row['LAST_NAME2'] \
+            else 0
 
     @staticmethod
     def get_institute_name(institutions, author):
@@ -300,7 +331,8 @@ class Compare:
             elif not institutions.startswith('[') and not institutions.endswith(']'):
                     return institutions
 
-    def compare_institute_names(self):
+    @staticmethod
+    def get_score_for_institute_names(row):
         '''
         For the training record, passed in input.
         1. GET INSTITUTE 1 using the method get_institute_name()
@@ -312,8 +344,8 @@ class Compare:
         :param training_record:
         :return: A score between 0 and 1.
         '''
-        institute1 = Compare.get_institute_name(self.record_df['INSTITUTE1'], self.record_df['LAST_NAME1'])
-        institute2 = Compare.get_institute_name(self.record_df['INSTITUTE2'], self.record_df['LAST_NAME2'])
+        institute1 = Compare.get_institute_name(row['INSTITUTE1'], row['LAST_NAME1'])
+        institute2 = Compare.get_institute_name(row['INSTITUTE2'], row['LAST_NAME2'])
         if institute1 is not None and institute2 is not None:
             institute1 = join_institute_names(split_institute(institute1)[0:3])
             institute2 = join_institute_names(split_institute(institute2)[0:3])
@@ -329,16 +361,25 @@ class Compare:
 
         :return:
         """
-        self.record_df['INSTIT_SCORE'] = self.record_df.apply(lambda row: self.compare_institute_names(), axis=1)
-        self.record_df['BOTH_NAME_SCORE'] = self.record_df.apply(lambda row: self.get_score_for_name(), axis=1)
-        self.record_df['FNAME_SCORE'] = self.record_df.apply(lambda row: fuzz.ratio(row['FIRST_NAME1'], row['FIRST_NAME2'])/100, axis=1)
-        self.record_df['LNAME_SCORE'] = self.record_df.apply(lambda row: fuzz.ratio(row['LAST_NAME1'], row['LAST_NAME2'])/100, axis=1)
-        self.record_df['LNAME_PARTIAL_SCORE'] = self.record_df.apply(lambda row: fuzz.partial_ratio(row['LAST_NAME1'], row['LAST_NAME2'])/100, axis=1)
-        self.record_df['FNAME_PARTIAL_SCORE'] = self.record_df.apply(lambda row: fuzz.partial_ratio(row['FIRST_NAME1'], row['FIRST_NAME2'])/100, axis=1)
-        self.record_df['EMAIL_ADDR_SCORE'] = self.record_df.apply(lambda row: self.get_score_for_email_address(), axis=1)
-        self.record_df['AUTH_KW_SCORE'] = self.record_df.apply(lambda row: self.get_score_for_author_keywords(), axis=1)
-        self.record_df['COAUTHOR_SCORE'] = self.record_df.apply(lambda row: self.get_score_for_coauthors(), axis=1)
+        self.record_df['INSTIT_SCORE'] = self.record_df.apply(lambda row: Compare.get_score_for_institute_names(row), axis=1)
+        self.record_df['BOTH_NAME_SCORE'] = self.record_df.apply(lambda row: Compare.get_score_for_name(row), axis=1)
+        self.record_df['FNAME_SCORE'] = self.record_df.apply(lambda row: max(fuzz.ratio(row['FIRST_NAME1'], row['FIRST_NAME2'])/100.0, fuzz.ratio(row['FIRST_NAME2'], row['FIRST_NAME1'])/100.0), axis=1)
+        self.record_df['LNAME_SCORE'] = self.record_df.apply(lambda row: max(fuzz.ratio(row['LAST_NAME1'], row['LAST_NAME2'])/100.0, fuzz.ratio(row['LAST_NAME2'], row['LAST_NAME1'])/100.0), axis=1)
+        self.record_df['LNAME_PARTIAL_SCORE'] = self.record_df.apply(lambda row: max(fuzz.partial_ratio(row['LAST_NAME1'], row['LAST_NAME2'])/100.0, fuzz.partial_ratio(row['LAST_NAME2'], row['LAST_NAME1'])/100.0), axis=1)
+        self.record_df['FNAME_PARTIAL_SCORE'] = self.record_df.apply(lambda row: max(fuzz.partial_ratio(row['FIRST_NAME1'], row['FIRST_NAME2'])/100.0, fuzz.partial_ratio(row['FIRST_NAME2'], row['FIRST_NAME2'])/100.0), axis=1)
+        self.record_df['EMAIL_ADDR_SCORE'] = self.record_df.apply(lambda row: Compare.get_score_for_email_address(row), axis=1)
+        self.record_df['AUTH_KW_SCORE'] = self.record_df.apply(lambda row: Compare.get_score_for_author_keywords(row), axis=1)
+        self.record_df['COAUTHOR_SCORE'] = self.record_df.apply(lambda row: Compare.get_score_for_coauthors(row), axis=1)
         self.scores_df = self.record_df[features]
+
+
+def classify(paper_sample1, paper_sample2):
+    compare_instance = Compare(paper_sample1, paper_sample2)
+    compare_instance.create_single_record()
+    compare_instance.calculate_scores()
+    return clf.predict(compare_instance.scores_df[features])
+
+
 
 
 
