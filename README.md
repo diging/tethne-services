@@ -198,7 +198,8 @@ author. We first build an initial cluster using the class `InitialCluster`. Plea
              u'SANTOSKA': set([u'SANTOSKAWOS:A1988R225500053']),
              u'SMITHGW': set([u'SMITHGWWOS:A1982QN98300013'])}
         ```
-
+ 
+An additional example which shows how 2 paper-instances are classified, can be found [here](https://github.com/diging/tethne-services/tree/master/classificationmodels)
 
  
 
