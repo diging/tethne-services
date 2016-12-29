@@ -31,8 +31,8 @@ This module will expose the following APIs:
 This module is responsible for parsing a `Tethne` corpus object and returns a pandas DataFrame with 14 columns. 
 Each row in the DataFrame is an Author-Paper instance. Also, please note that each row in the DataFrame is assigned an index.
 The index is generated using (concatenation of)the following:
-                    1. WOS ID
-                    2. Author Last Name              
+                    1. WOS ID         
+                    2. Author Last Name             
                     3. Author First Name
 
     * An example usage of this API is shown below.
