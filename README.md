@@ -104,7 +104,7 @@ While we build this initial cluster, we group together author_literals which are
 
 * `IdentityCluster.py`: 
 IdentityCluster class uses Machine Learning(RandomForestClassifier) to cluster paper instances belonging to the same
-author. We first build an initial cluster using the class `InitialCluster`. Algorithm to build the IdentityCluster:
+author. We first build an initial cluster using the class `InitialCluster`. Please read the example below to understand it's usage
 
     * An example usage of this API is shown below 
     
