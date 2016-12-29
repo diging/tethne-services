@@ -40,7 +40,7 @@ The index is generated using (concatenation of)the following:
         ```python
         from authors.paperinstances import CorpusParser
         from tethne.readers import wos
-        datapath = "/Users/aosingh/tethne-services/tests/data/Albertini_David.txt"
+        datapath = "/Users/aosingh/tethne-services/tests/data/Boyer_Barbara.txt"
         corpus = wos.read(datapath)
         corpus_parser = CorpusParser(tethne_corpus=corpus)
         df = corpus_parser.parse() # final pandas DataFrame of Author-Paper instances.
@@ -129,7 +129,7 @@ author. We first build an initial cluster using the class `InitialCluster`. Plea
          from authors.cluster import IdentityCluster
          from tethne.readers import wos
          from authors.paperinstances import CorpusParser
-         datapath = "/Users/aosingh/tethne-services/tests/data/Albertini_David.txt"
+         datapath = "/Users/aosingh/tethne-services/tests/data/Boyer_Barbara.txt"
          corpus = wos.read(datapath)
 
          corpus_parser = CorpusParser(tethne_corpus=corpus)
