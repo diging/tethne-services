@@ -16,7 +16,9 @@ These models can be directly loaded and used for prediction: An example is shown
     df = parser.parse()
     
        
-    # Define the indices for 2 paper samples that you want to compare
+    # Define the indices for 2 paper samples that you want to compare.
+    # (Please note that these indices are returned as part of the final identity clusters)
+    # I have defined them for the purpose of explanation.
     
     index1 = 'BOYERBCWOS:000076265300004'
     index2 = 'BOYERBWOS:A1996UQ10700011'
